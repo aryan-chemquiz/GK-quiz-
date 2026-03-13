@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GK Quiz India — Test Your Knowledge!</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d1a;
+    --surface: #13132a;
+    --card: #1a1a35;
+    --saffron: #ff9933;
+    --green: #138808;
+    --blue: #000080;
+    --white: #ffffff;
+    --accent: #ff9933;
+    --accent2: #00d4aa;
+    --text: #f0f0ff;
+    --muted: #8888aa;
+    --correct: #00d4aa;
+    --wrong: #ff4d6d;
+    --border: rgba(255,153,51,0.2);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Baloo 2', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: 
+      radial-gradient(ellipse at 20% 20%, rgba(255,153,51,0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(0,212,170,0.06) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 20px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* HOME */
+  .home-top {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  .flag-strip {
+    display: flex;
+    height: 6px;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 24px;
+    width: 80px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .flag-strip div { flex: 1; }
+  .flag-saffron { background: #ff9933; }
+  .flag-white { background: #ffffff; }
+  .flag-green { background: #138808; }
+
+  .home-emoji { font-size: 3.5rem; margin-bottom: 12px; }
+
+  .home-title {
+    font-size: clamp(2rem, 7vw, 3.5rem);
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 8px;
+  }
+
+  .home-title .highlight { color: var(--accent); }
+
+  .home-sub {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1rem;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 32px;
+  }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+
+  .stat-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 10px;
+    text-align: center;
+  }
+
+  .stat-num {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--accent);
+  }
+
+  .stat-label {
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-family: 'Rajdhani', sans-serif;
+  }
+
+  .topic-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .topic-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .topic-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .topic-card.selected { border-color: var(--accent); background: rgba(255,153,51,0.08); }
+
+  .topic-check {
+    position: absolute;
+    top: 10px; right: 10px;
+    width: 22px; height: 22px;
+    background: var(--accent);
+    color: #000;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .topic-icon { font-size: 1.8rem; margin-bottom: 6px; }
+  .topic-name { font-weight: 700; font-size: 0.9rem; }
+  .topic-count { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+
+  .btn-primary {
+    width: 100%;
+    background: linear-gradient(135deg, var(--saffron), #ff6600);
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    padding: 18px;
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+  }
+
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255,153,51,0.4); }
+
+  /* QUIZ */
+  .quiz-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .topic-badge {
+    background: rgba(255,153,51,0.15);
+    border: 1px solid rgba(255,153,51,0.3);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  .timer-box {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--accent2);
+    background: rgba(0,212,170,0.1);
+    border: 1px solid rgba(0,212,170,0.3);
+    border-radius: 10px;
+    padding: 6px 14px;
+  }
+
+  .timer-box.urgent { color: var(--wrong); border-color: var(--wrong); background: rgba(255,77,109,0.1); animation: pulse 0.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+  .progress-wrap {
+    background: var(--surface);
+    border-radius: 10px;
+    height: 6px;
+    margin-bottom: 8px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--saffron), var(--accent2));
+    border-radius: 10px;
+    transition: width 0.3s;
+  }
+
+  .q-counter {
+    font-size: 0.8rem;
+    color: var(--muted);
+    font-family: 'Rajdhani', sans-serif;
+    letter-spacing: 1px;
+    margin-bottom: 20px;
+    text-align: right;
+  }
+
+  .question-text {
+    font-size: clamp(1rem, 3vw, 1.2rem);
+    font-weight: 700;
+    line-height: 1.5;
+    margin-bottom: 24px;
+    color: var(--text);
+  }
+
+  .options-grid { display: grid; gap: 10px; margin-bottom: 20px; }
+
+  .option-btn {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 18px;
+    text-align: left;
+    color: var(--text);
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .opt-label {
+    width: 28px; height: 28px;
+    background: rgba(255,153,51,0.1);
+    border: 1px solid rgba(255,153,51,0.3);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .option-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    background: rgba(255,153,51,0.08);
+    transform: translateX(4px);
+  }
+
+  .option-btn.correct { border-color: var(--correct); background: rgba(0,212,170,0.1); color: var(--correct); }
+  .option-btn.correct .opt-label { color: var(--correct); border-color: var(--correct); background: rgba(0,212,170,0.1); }
+  .option-btn.wrong { border-color: var(--wrong); background: rgba(255,77,109,0.1); color: var(--wrong); }
+  .option-btn.wrong .opt-label { color: var(--wrong); border-color: var(--wrong); background: rgba(255,77,109,0.1); }
+  .option-btn:disabled { cursor: default; }
+
+  .exp-box {
+    background: rgba(0,212,170,0.05);
+    border-left: 3px solid var(--accent2);
+    border-radius: 0 10px 10px 0;
+    padding: 12px 16px;
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 16px;
+    line-height: 1.6;
+    display: none;
+  }
+  .exp-box.show { display: block; }
+
+  .btn-next {
+    width: 100%;
+    background: transparent;
+    border: 2px solid var(--accent);
+    border-radius: 12px;
+    color: var(--accent);
+    padding: 14px;
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: none;
+  }
+  .btn-next.show { display: block; }
+  .btn-next:hover { background: var(--accent); color: #000; }
+
+  /* RESULT */
+  .result-wrap { text-align: center; }
+
+  .score-circle {
+    width: 150px; height: 150px;
+    border-radius: 50%;
+    background: var(--card);
+    border: 4px solid var(--accent);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    margin: 0 auto 28px;
+    box-shadow: 0 0 40px rgba(255,153,51,0.2);
+  }
+
+  .score-pct {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .score-label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+
+  .result-title { font-size: 2rem; font-weight: 800; margin-bottom: 6px; }
+  .result-msg { color: var(--muted); font-size: 0.9rem; margin-bottom: 28px; }
+
+  .result-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+
+  .res-stat {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+  }
+
+  .res-num { font-size: 1.6rem; font-weight: 800; font-family: 'Rajdhani', sans-serif; }
+  .res-num.g { color: var(--correct); }
+  .res-num.r { color: var(--wrong); }
+  .res-num.b { color: var(--accent); }
+  .res-lbl { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+
+  .share-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 16px;
+    text-align: left;
+  }
+
+  .share-title { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 2px; font-family: 'Rajdhani', sans-serif; margin-bottom: 10px; }
+
+  .share-text {
+    font-size: 0.8rem;
+    color: var(--text);
+    line-height: 1.7;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+    font-family: 'Rajdhani', sans-serif;
+  }
+
+  .btn-copy {
+    background: linear-gradient(135deg, var(--accent2), #00a884);
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-copy:hover { opacity: 0.85; }
+
+  .btn-retry {
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--muted);
+    border-radius: 12px;
+    color: var(--muted);
+    padding: 14px;
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 10px;
+  }
+
+  .btn-retry:hover { border-color: var(--text); color: var(--text); }
+
+  .fade-in { animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+  @media(max-width:480px) { .topic-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HOME -->
+  <div class="screen active" id="homeScreen">
+    <div class="home-top">
+      <div class="flag-strip"><div class="flag-saffron"></div><div class="flag-white"></div><div class="flag-green"></div></div>
+      <div class="home-emoji">🧠</div>
+      <h1 class="home-title">GK <span class="highlight">Quiz</span><br>Challenge!</h1>
+      <p class="home-sub">Test Your Knowledge · India & World</p>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-num">50</div><div class="stat-label">Questions</div></div>
+      <div class="stat-box"><div class="stat-num">5</div><div class="stat-label">Topics</div></div>
+      <div class="stat-box"><div class="stat-num">30s</div><div class="stat-label">Per Q</div></div>
+    </div>
+
+    <p style="font-size:0.8rem;color:var(--muted);margin-bottom:12px;font-family:'Rajdhani',sans-serif;letter-spacing:1px;text-transform:uppercase;">Select Topics:</p>
+
+    <div class="topic-grid" id="topicGrid">
+      <div class="topic-card selected" data-topic="india" onclick="toggleTopic(this)">
+        <div class="topic-check">✓</div>
+        <div class="topic-icon">🇮🇳</div>
+        <div class="topic-name">India GK</div>
+        <div class="topic-count">10 questions</div>
+      </div>
+      <div class="topic-card selected" data-topic="science" onclick="toggleTopic(this)">
+        <div class="topic-check">✓</div>
+        <div class="topic-icon">🔬</div>
+        <div class="topic-name">Science & Tech</div>
+        <div class="topic-count">10 questions</div>
+      </div>
+      <div class="topic-card selected" data-topic="sports" onclick="toggleTopic(this)">
+        <div class="topic-check">✓</div>
+        <div class="topic-icon">🏏</div>
+        <div class="topic-name">Sports</div>
+        <div class="topic-count">10 questions</div>
+      </div>
+      <div class="topic-card selected" data-topic="current" onclick="toggleTopic(this)">
+        <div class="topic-check">✓</div>
+        <div class="topic-icon">📰</div>
+        <div class="topic-name">Current Affairs</div>
+        <div class="topic-count">10 questions</div>
+      </div>
+      <div class="topic-card selected" data-topic="ai" onclick="toggleTopic(this)" style="grid-column: span 2;">
+        <div class="topic-check">✓</div>
+        <div class="topic-icon">🤖</div>
+        <div class="topic-name">Artificial Intelligence</div>
+        <div class="topic-count">10 questions</div>
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="startQuiz()">🚀 START QUIZ NOW!</button>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="screen" id="quizScreen">
+    <div class="quiz-header">
+      <div class="topic-badge" id="topicBadge">India GK</div>
+      <div class="timer-box" id="timerBox">⏱ 30s</div>
+    </div>
+    <div class="progress-wrap"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    <div class="q-counter" id="qCounter">1 / 50</div>
+    <div class="question-text" id="questionText"></div>
+    <div class="options-grid" id="optionsGrid"></div>
+    <div class="exp-box" id="expBox"></div>
+    <button class="btn-next" id="nextBtn" onclick="nextQuestion()">NEXT →</button>
+  </div>
+
+  <!-- RESULT -->
+  <div class="screen" id="resultScreen">
+    <div class="result-wrap">
+      <div class="score-circle">
+        <div class="score-pct" id="resPct">0%</div>
+        <div class="score-label">Your Score</div>
+      </div>
+      <h2 class="result-title" id="resTitle">Well Done!</h2>
+      <p class="result-msg" id="resMsg"></p>
+      <div class="result-stats">
+        <div class="res-stat"><div class="res-num g" id="resC">0</div><div class="res-lbl">Correct</div></div>
+        <div class="res-stat"><div class="res-num r" id="resW">0</div><div class="res-lbl">Wrong</div></div>
+        <div class="res-stat"><div class="res-num b" id="resS">0</div><div class="res-lbl">Skipped</div></div>
+      </div>
+      <div class="share-box">
+        <div class="share-title">📲 Share on WhatsApp / Instagram</div>
+        <div class="share-text" id="shareText"></div>
+        <button class="btn-copy" onclick="copyShare()">📋 Copy & Share</button>
+      </div>
+      <button class="btn-primary" onclick="restartQuiz()">🔄 TRY AGAIN</button>
+      <button class="btn-retry" onclick="goHome()">← Change Topics</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const ALL_Q = {
+  india: [
+    { q: "India ka national animal kaunsa hai?", opts: ["Sher", "Haathi", "Bagh", "Mor"], ans: 2, exp: "Bengal Tiger (Bagh) India ka national animal hai — 1973 mein declare kiya gaya." },
+    { q: "India ka sabse bada rajya (area mein) kaunsa hai?", opts: ["Maharashtra", "Madhya Pradesh", "Rajasthan", "Uttar Pradesh"], ans: 2, exp: "Rajasthan area mein India ka sabse bada rajya hai — 342,239 km²." },
+    { q: "India ka Constitution kab lagu hua?", opts: ["15 August 1947", "26 January 1950", "26 November 1949", "2 October 1950"], ans: 1, exp: "Indian Constitution 26 January 1950 ko lagu hua — isliye Republic Day manate hain." },
+    { q: "Bharat Ratna award kitne fields mein diya jaata hai?", opts: ["Sirf Arts mein", "Sirf Science mein", "Kisi bhi field mein", "Sirf Sports mein"], ans: 2, exp: "Bharat Ratna India ka highest civilian award hai — kisi bhi field mein diya ja sakta hai." },
+    { q: "India ki pehli mahila Prime Minister kaun thi?", opts: ["Pratibha Patil", "Indira Gandhi", "Sarojini Naidu", "Sonia Gandhi"], ans: 1, exp: "Indira Gandhi India ki pehli aur abhi tak ekmaatra mahila Prime Minister rahi hain." },
+    { q: "Ganga nadi kahan se nikalti hai?", opts: ["Yamunotri", "Gangotri", "Kedarnath", "Badrinath"], ans: 1, exp: "Ganga nadi Gangotri glacier (Uttarakhand) se nikalti hai." },
+    { q: "India mein kitne states hain (2024)?", opts: ["28", "29", "30", "27"], ans: 0, exp: "2024 mein India mein 28 states aur 8 Union Territories hain." },
+    { q: "Taj Mahal kahan hai?", opts: ["Delhi", "Jaipur", "Agra", "Lucknow"], ans: 2, exp: "Taj Mahal Agra (Uttar Pradesh) mein hai — Mughal emperor Shah Jahan ne banwaya tha." },
+    { q: "India ka national game kaunsa hai?", opts: ["Cricket", "Hockey", "Kabaddi", "Koi official national game nahi"], ans: 3, exp: "India ka koi officially declared national game nahi hai — Hockey ko galat mana jaata tha." },
+    { q: "India ki currency ka symbol ₹ kab adopt kiya gaya?", opts: ["2005", "2010", "2015", "2000"], ans: 1, exp: "Indian Rupee symbol ₹ July 2010 mein officially adopt kiya gaya." },
+  ],
+  science: [
+    { q: "Water ka chemical formula kya hai?", opts: ["CO2", "H2O", "NaCl", "O2"], ans: 1, exp: "Paani (Water) = H2O — 2 Hydrogen + 1 Oxygen atom." },
+    { q: "Light ki speed kitni hoti hai?", opts: ["3×10⁸ m/s", "3×10⁶ m/s", "3×10¹⁰ m/s", "3×10⁴ m/s"], ans: 0, exp: "Prakash ki speed = 3×10⁸ m/s (3 lakh km per second)." },
+    { q: "DNA ka full form kya hai?", opts: ["Deoxyribose Nucleic Acid", "Deoxyribonucleic Acid", "Double Nucleic Acid", "Digital Nucleic Acid"], ans: 1, exp: "DNA = Deoxyribonucleic Acid — genetic information carry karta hai." },
+    { q: "Sabse chota planet Solar System mein?", opts: ["Mars", "Mercury", "Venus", "Pluto"], ans: 1, exp: "Mercury Solar System ka sabse chota planet hai (Pluto ab planet nahi)." },
+    { q: "Newton ka 3rd law kya hai?", opts: ["F=ma", "Har action ki equal aur opposite reaction hoti hai", "Energy conserved hoti hai", "Gravity ka law"], ans: 1, exp: "Newton ka 3rd law: Every action has an equal and opposite reaction." },
+    { q: "Human body mein kitni haddiyan hoti hain (adult)?", opts: ["206", "208", "200", "212"], ans: 0, exp: "Adult human body mein 206 bones hoti hain." },
+    { q: "Oxygen ka atomic number kya hai?", opts: ["6", "7", "8", "9"], ans: 2, exp: "Oxygen ka atomic number 8 hai — periodic table mein 8th element." },
+    { q: "Internet ki khoj kisne ki?", opts: ["Bill Gates", "Tim Berners-Lee", "Vint Cerf & Bob Kahn", "Steve Jobs"], ans: 2, exp: "Internet (ARPANET) Vint Cerf aur Bob Kahn ne develop kiya — 1970s mein." },
+    { q: "CPU ka full form kya hai?", opts: ["Central Process Unit", "Central Processing Unit", "Computer Processing Unit", "Core Processing Unit"], ans: 1, exp: "CPU = Central Processing Unit — computer ka 'brain' kehlaata hai." },
+    { q: "Photosynthesis mein kaunsi gas release hoti hai?", opts: ["CO2", "N2", "O2", "H2"], ans: 2, exp: "Photosynthesis mein plants CO2 absorb karke O2 (Oxygen) release karte hain." },
+  ],
+  sports: [
+    { q: "Cricket World Cup 2023 kisne jeeta?", opts: ["India", "Australia", "England", "Pakistan"], ans: 1, exp: "Australia ne 2023 ODI World Cup jeeta — India ko final mein haraaya." },
+    { q: "Olympics mein sabse zyada gold medals kis desh ne jeete hain (all time)?", opts: ["China", "Russia", "USA", "Germany"], ans: 2, exp: "USA ne Olympics history mein sabse zyada gold medals jeete hain." },
+    { q: "Cricket mein 'Duck' ka matlab kya hai?", opts: ["100 runs banana", "0 pe out hona", "6 sixes maarna", "Hat-trick"], ans: 1, exp: "Duck = batsman 0 runs pe out ho jaye." },
+    { q: "Football World Cup 2022 kisne jeeta?", opts: ["Brazil", "France", "Argentina", "Germany"], ans: 2, exp: "Argentina ne 2022 FIFA World Cup jeeta — Lionel Messi ki captaincy mein." },
+    { q: "Sachin Tendulkar ka nickname kya hai?", opts: ["Master Blaster", "Little Master", "Dono sahi hain", "God of Cricket"], ans: 2, exp: "Sachin ko 'Master Blaster' aur 'Little Master' dono kehte hain — 'God of Cricket' bhi." },
+    { q: "Olympics kitne saal mein ek baar hote hain?", opts: ["2 saal", "3 saal", "4 saal", "5 saal"], ans: 2, exp: "Summer Olympics har 4 saal mein ek baar hote hain." },
+    { q: "India ne pehla Cricket World Cup kab jeeta?", opts: ["1975", "1979", "1983", "1987"], ans: 2, exp: "India ne 1983 mein pehla Cricket World Cup jeeta — Kapil Dev ki captaincy mein." },
+    { q: "Badminton mein shuttle cock kitne feathers se banta hai?", opts: ["14", "16", "18", "12"], ans: 1, exp: "Traditional badminton shuttlecock 16 feathers se banta hai." },
+    { q: "PV Sindhu kaunsa khel khelte hain?", opts: ["Tennis", "Badminton", "Table Tennis", "Squash"], ans: 1, exp: "PV Sindhu India ki star Badminton player hain — Olympic medal winner." },
+    { q: "T20 Cricket mein ek over mein kitni balls hoti hain?", opts: ["4", "5", "6", "8"], ans: 2, exp: "Cricket mein ek over mein 6 valid balls hoti hain." },
+  ],
+  current: [
+    { q: "India ka 2024 mein Prime Minister kaun hai?", opts: ["Rahul Gandhi", "Narendra Modi", "Amit Shah", "Yogi Adityanath"], ans: 1, exp: "Narendra Modi 2014 se India ke Prime Minister hain — 2024 mein bhi re-elected hue." },
+    { q: "2024 Paris Olympics mein India ne kitne medals jeete?", opts: ["4", "5", "6", "7"], ans: 2, exp: "India ne Paris Olympics 2024 mein 6 medals jeete — 1 Silver aur 5 Bronze." },
+    { q: "ChatGPT kaunsi company ne banaya?", opts: ["Google", "Microsoft", "OpenAI", "Meta"], ans: 2, exp: "ChatGPT OpenAI ne banaya — November 2022 mein launch kiya gaya." },
+    { q: "2024 mein India ka GDP growth rate approximately kitna raha?", opts: ["5%", "6.5%", "7%", "8%"], ans: 2, exp: "India 2024 mein approximately 7% GDP growth ke saath fastest growing major economy raha." },
+    { q: "UPI ka full form kya hai?", opts: ["Unified Payment Interface", "Universal Payment Interface", "United Payment Interface", "Unified Process Interface"], ans: 0, exp: "UPI = Unified Payments Interface — NPCI ne develop kiya, India ka revolutionary payment system." },
+    { q: "Chandrayaan-3 kab launch hua?", opts: ["2022", "2023", "2021", "2024"], ans: 1, exp: "Chandrayaan-3 July 2023 mein launch hua aur August 2023 mein Moon pe land kiya." },
+    { q: "G20 2023 summit kahan hua?", opts: ["Mumbai", "Chennai", "New Delhi", "Bangalore"], ans: 2, exp: "G20 Summit 2023 New Delhi mein hua — India ne successfully host kiya." },
+    { q: "India ka pehla private space rocket kaunsa tha?", opts: ["Vikram-S", "Agnibaan", "Agnilet", "Noor"], ans: 0, exp: "Vikram-S, Skyroot Aerospace ka, India ka pehla privately developed rocket tha (2022)." },
+    { q: "2024 mein kaunsa desh NATO ka newest member bana?", opts: ["Ukraine", "Georgia", "Sweden", "Finland"], ans: 2, exp: "Sweden March 2024 mein NATO ka 32nd member ban gaya." },
+    { q: "India ne 2023 mein kaunsa milestone achieve kiya population mein?", opts: ["2 billion", "World's most populous country bana", "1.5 billion", "Population decline shuru hua"], ans: 1, exp: "2023 mein India China ko pichhe chhod kar world's most populous country ban gaya." },
+  ],
+  ai: [
+    { q: "AI ka full form kya hai?", opts: ["Automated Intelligence", "Artificial Intelligence", "Advanced Interface", "Automated Interface"], ans: 1, exp: "AI = Artificial Intelligence — machines ko human-like intelligence dena." },
+    { q: "Machine Learning mein 'Training data' ka kya matlab hai?", opts: ["Test questions", "Data jisse model seekhta hai", "Output data", "Error data"], ans: 1, exp: "Training data wo data hai jisse ML model patterns seekhta aur train hota hai." },
+    { q: "ChatGPT mein GPT ka full form kya hai?", opts: ["General Pre-trained Transformer", "Generative Pre-trained Transformer", "Global Pre-trained Technology", "Generative Processing Technology"], ans: 1, exp: "GPT = Generative Pre-trained Transformer — OpenAI ka language model." },
+    { q: "Deep Learning kaunse structure se inspired hai?", opts: ["Computer circuits", "Human brain ka neural network", "DNA structure", "Solar system"], ans: 1, exp: "Deep Learning human brain ke neural networks se inspired hai — artificial neurons use karta hai." },
+    { q: "Turing Test kya test karta hai?", opts: ["Computer speed", "Internet bandwidth", "Machine ki human jaisi intelligence", "Memory capacity"], ans: 2, exp: "Turing Test check karta hai ki kya machine insaan jaisi intelligent conversation kar sakti hai." },
+    { q: "Kaunsa AI model image generate karta hai?", opts: ["ChatGPT", "DALL-E / Midjourney", "Excel", "Google Maps"], ans: 1, exp: "DALL-E (OpenAI) aur Midjourney text se images generate karte hain." },
+    { q: "Self-driving cars mein mainly kaunsi AI technology use hoti hai?", opts: ["Natural Language Processing", "Computer Vision", "Speech Recognition", "Recommendation System"], ans: 1, exp: "Self-driving cars mainly Computer Vision use karte hain — cameras se environment samajhte hain." },
+    { q: "Netflix aur YouTube kaunsi AI technology se videos recommend karte hain?", opts: ["Deep Learning", "Recommendation System (Collaborative Filtering)", "Speech AI", "Robotics"], ans: 1, exp: "Recommendation Systems (Collaborative Filtering + ML) user preferences se content suggest karte hain." },
+    { q: "AI mein 'Overfitting' ka matlab kya hai?", opts: ["Model bahut slow hai", "Model training data pe bahut acha par new data pe bura kaam karta hai", "Model crash ho gaya", "Model chhota hai"], ans: 1, exp: "Overfitting = model training data memorize kar leta hai, new data pe poorly perform karta hai." },
+    { q: "Google ka AI chatbot kaunsa hai?", opts: ["Cortana", "Siri", "Gemini", "Alexa"], ans: 2, exp: "Google ka AI chatbot Gemini hai — pehle Bard ke naam se jaana jaata tha." },
+  ]
+};
+
+let questions = [], idx = 0, score = 0, wrong = 0, skipped = 0;
+let timer = null, timeLeft = 30, answered = false;
+
+function toggleTopic(card) {
+  card.classList.toggle('selected');
+  const check = card.querySelector('.topic-check');
+  if (card.classList.contains('selected')) {
+    if (!check) { const d = document.createElement('div'); d.className='topic-check'; d.textContent='✓'; card.appendChild(d); }
+  } else { if (check) check.remove(); }
+}
+
+function startQuiz() {
+  const selected = document.querySelectorAll('.topic-card.selected');
+  if (!selected.length) { alert('Kam se kam ek topic select karo!'); return; }
+  questions = [];
+  selected.forEach(c => { const t = c.dataset.topic; if (ALL_Q[t]) questions.push(...ALL_Q[t].map(q=>({...q,topic:c.querySelector('.topic-name').textContent}))); });
+  questions = questions.sort(() => Math.random() - 0.5);
+  idx=0; score=0; wrong=0; skipped=0;
+  showScreen('quizScreen');
+  loadQ();
+}
+
+function loadQ() {
+  if (idx >= questions.length) { showResult(); return; }
+  answered = false;
+  const q = questions[idx];
+  const total = questions.length;
+  document.getElementById('topicBadge').textContent = q.topic;
+  document.getElementById('qCounter').textContent = `${idx+1} / ${total}`;
+  document.getElementById('questionText').textContent = q.q;
+  document.getElementById('progressFill').style.width = `${(idx/total)*100}%`;
+  const grid = document.getElementById('optionsGrid');
+  grid.innerHTML = '';
+  ['A','B','C','D'].forEach((lbl,i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn fade-in';
+    btn.innerHTML = `<span class="opt-label">${lbl}</span>${q.opts[i]}`;
+    btn.onclick = () => selectAns(i);
+    grid.appendChild(btn);
+  });
+  document.getElementById('expBox').className = 'exp-box';
+  document.getElementById('nextBtn').className = 'btn-next';
+  startTimer();
+}
+
+function startTimer() {
+  clearInterval(timer);
+  timeLeft = 30;
+  updateTimer();
+  timer = setInterval(() => {
+    timeLeft--;
+    updateTimer();
+    if (timeLeft <= 0) { clearInterval(timer); if (!answered) { skipped++; autoSkip(); } }
+  }, 1000);
+}
+
+function updateTimer() {
+  const b = document.getElementById('timerBox');
+  b.textContent = `⏱ ${timeLeft}s`;
+  b.className = timeLeft <= 10 ? 'timer-box urgent' : 'timer-box';
+}
+
+function autoSkip() {
+  answered = true;
+  const q = questions[idx];
+  const btns = document.querySelectorAll('.option-btn');
+  btns.forEach(b => b.disabled = true);
+  btns[q.ans].classList.add('correct');
+  document.getElementById('expBox').textContent = '⏰ Time up! ' + q.exp;
+  document.getElementById('expBox').className = 'exp-box show';
+  document.getElementById('nextBtn').className = 'btn-next show';
+}
+
+function selectAns(i) {
+  if (answered) return;
+  answered = true;
+  clearInterval(timer);
+  const q = questions[idx];
+  const btns = document.querySelectorAll('.option-btn');
+  btns.forEach(b => b.disabled = true);
+  if (i === q.ans) { btns[i].classList.add('correct'); score++; }
+  else { btns[i].classList.add('wrong'); btns[q.ans].classList.add('correct'); wrong++; }
+  document.getElementById('expBox').textContent = '💡 ' + q.exp;
+  document.getElementById('expBox').className = 'exp-box show';
+  document.getElementById('nextBtn').className = 'btn-next show';
+}
+
+function nextQuestion() { idx++; loadQ(); }
+
+function showResult() {
+  showScreen('resultScreen');
+  const total = questions.length;
+  const pct = Math.round((score/total)*100);
+  document.getElementById('resPct').textContent = pct + '%';
+  document.getElementById('resC').textContent = score;
+  document.getElementById('resW').textContent = wrong;
+  document.getElementById('resS').textContent = skipped;
+  let title, msg;
+  if (pct >= 80) { title = '🏆 Genius!'; msg = 'Zabardast! Tera GK bahut strong hai!'; }
+  else if (pct >= 60) { title = '👍 Bahut Achha!'; msg = 'Thodi aur practice karo — top pe aoge!'; }
+  else if (pct >= 40) { title = '📚 Theek Hai!'; msg = 'Padhte raho — improvement aayegi!'; }
+  else { title = '💪 Koshish Karo!'; msg = 'Haar mat maano — try again karo!'; }
+  document.getElementById('resTitle').textContent = title;
+  document.getElementById('resMsg').textContent = msg;
+  const stars = pct>=80?'⭐⭐⭐':pct>=60?'⭐⭐':'⭐';
+  document.getElementById('shareText').textContent =
+    `${stars} GK Quiz Result ${stars}\n\nScore: ${pct}% (${score}/${total})\nSahi: ${score} | Galat: ${wrong}\n\nTu bhi try kar! 👇\nLink bio mein hai!\n\n#GKQuiz #IndiaGK #Quiz #Knowledge`;
+}
+
+function copyShare() {
+  navigator.clipboard.writeText(document.getElementById('shareText').textContent).then(() => {
+    const b = document.querySelector('.btn-copy');
+    b.textContent = '✅ Copied!';
+    setTimeout(() => b.textContent = '📋 Copy & Share', 2000);
+  });
+}
+
+function restartQuiz() { idx=0; score=0; wrong=0; skipped=0; questions=questions.sort(()=>Math.random()-0.5); showScreen('quizScreen'); loadQ(); }
+function goHome() { clearInterval(timer); showScreen('homeScreen'); }
+function showScreen(id) { document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+</script>
+</body>
+</html>
